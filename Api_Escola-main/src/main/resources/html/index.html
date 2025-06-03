@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="style.css">
+    <title>Página Dinâmica com Tailwind</title>
+  </head>
+  <body class="bg-gray-100 min-h-screen">
+
+    <!-- Menu de Navegação -->
+    <nav class="bg-gray-800 p-4">
+      <div class="container mx-auto flex justify-between items-center">
+        <a class="text-white font-bold text-xl" href="#">Meu Site</a>
+        <div>
+          <a class="text-gray-300 hover:text-white mx-2" href="#">Início</a>
+        </div>
+      </div>
+    </nav>
+    <!--Formulario de Cadastro-->
+    <div class="container mx-auto mt-8 p-4">
+      <h2 class="text-2xl font-bold mb-4">Formulário de Cadastro</h2>
+      <form id="formCadastro" class="bg-white shadow-md rounded p-4">
+        <input type="hidden" id="idEdicao">
+        <div class="mb-4">
+          <label for="nome" class="block text-gray-700 font-bold mb-2">Nome</label>
+          <input type="text" id="nome" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <div class="mb-4">
+          <label for="email" class="block text-gray-700 font-bold mb-2">E-mail</label>
+          <input type="email" id="email" class="w-full px-3 py-2 border rounded" required>
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Adicionar</button>
+        <button type="button" id="btnCancelar" class="hidden bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600 ml-2">Cancelar</button>
+      </form>
+
+
+      <!--Tabela de Cadastros-->
+      <h2 class="text-2xl font-bold mt-8 mb-4">Tabela de Cadastros</h2>
+      <table class="w-full table-auto bg-white shadow-md rounded">
+        <thead class="bg-gray-200">
+          <tr>
+            <th class="px-4 py-2">ID</th>
+            <th class="px-4 py-2">Nome</th>
+            <th class="px-4 py-2">E-mail</th>
+            <th class="px-4 py-2">Ação</th>
+          </tr>
+        </thead>
+        <tbody id="tabelaCorpo">
+
+          <!-- Linhas dinâmicas aqui -->
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!--Adicionando Notificação-->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+      // Banco de dados temporário
+      let cadastros = [];
+      let nextId = 1;
+
+      // Elementos do DOM
+      const form = document.getElementById('formCadastro');
+      const tabelaCorpo = document.getElementById('tabelaCorpo');
+      const btnCancelar = document.getElementById('btnCancelar');
+      const idEdicao = document.getElementById('idEdicao');
+      
+      // Função para renderizar a tabela
+      function renderizarTabela() {
+        tabelaCorpo.innerHTML = '';
+        
+        cadastros.forEach(cadastro => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="px-4 py-2 border">${cadastro.id}</td>
+            <td class="px-4 py-2 border">${cadastro.nome}</td>
+            <td class="px-4 py-2 border">${cadastro.email}</td>
+            <td class="px-4 py-2 border">
+              <button onclick="editarCadastro(${cadastro.id})" class="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-600 mr-2">Editar</button>
+              <button onclick="excluirCadastro(${cadastro.id})" class="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600">Excluir</button>
+            </td>
+          `;
+          tabelaCorpo.appendChild(tr);
+        });
+      }
+
+      // Função para cadastrar ou atualizar
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const nome = document.getElementById('nome').value;
+        const email = document.getElementById('email').value;
+        
+        if (idEdicao.value) {
+          // Atualizar cadastro existente
+          const id = parseInt(idEdicao.value);
+          const index = cadastros.findIndex(c => c.id === id);
+          
+          if (index !== -1) {
+            cadastros[index] = { id, nome, email };
+            Swal.fire({
+              icon: 'success',
+              title: 'Sucesso!',
+              text: 'Cadastro atualizado com sucesso.',
+              confirmButtonColor: '#3085d6',
+            });
+          }
+        } else {
+          // Adicionar novo cadastro
+          cadastros.push({ id: nextId++, nome, email });
+          Swal.fire({
+            icon: 'success',
+            title: 'Sucesso!',
+            text: 'Cadastro adicionado com sucesso.',
+            confirmButtonColor: '#3085d6',
+          });
+        }
+        
+        // Limpar formulário e renderizar tabela
+        form.reset();
+        idEdicao.value = '';
+        btnCancelar.classList.add('hidden');
+        renderizarTabela();
+      });
+
+      // Função para editar cadastro
+      window.editarCadastro = function(id) {
+        const cadastro = cadastros.find(c => c.id === id);
+        
+        if (cadastro) {
+          document.getElementById('nome').value = cadastro.nome;
+          document.getElementById('email').value = cadastro.email;
+          idEdicao.value = cadastro.id;
+          btnCancelar.classList.remove('hidden');
+          
+          // Rolando para o formulário
+          form.scrollIntoView({ behavior: 'smooth' });
+        }
+      };
+
+      // Função para excluir cadastro
+      window.excluirCadastro = function(id) {
+        Swal.fire({
+          title: 'Tem certeza?',
+          text: "Você não poderá reverter isso!",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#d33',
+          cancelButtonColor: '#3085d6',
+          confirmButtonText: 'Sim, excluir!'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            cadastros = cadastros.filter(c => c.id !== id);
+            renderizarTabela();
+            
+            Swal.fire(
+              'Excluído!',
+              'O cadastro foi removido.',
+              'success'
+            );
+          }
+        });
+      };
+
+      // Função para cancelar edição
+      btnCancelar.addEventListener('click', function() {
+        form.reset();
+        idEdicao.value = '';
+        btnCancelar.classList.add('hidden');
+      });
+
+      // Renderizar tabela inicialmente
+      renderizarTabela();
+    </script>
+  </body>
+</html>
