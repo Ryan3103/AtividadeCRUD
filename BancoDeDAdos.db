@@ -1,9 +1,0 @@
-create database BancoImagem;
-
-use BancoImagem;
-
-create table imagens (
-id int,
-nome VARCHAR (70),
-url VARCHAR(255)
-);
